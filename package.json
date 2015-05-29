@@ -1,0 +1,31 @@
+{
+  "name": "polygons-to-obj",
+  "version": "0.1.0",
+  "description": "Takes polygon and face arrays and returns an OBJ string",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/polygon-city/polygons-to-obj"
+  },
+  "keywords": [
+    "citygml",
+    "3d",
+    "polygons",
+    "obj",
+    "convert",
+    "mapping",
+    "gis"
+  ],
+  "author": "Robin Hawkes <rob@vizicities.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/polygon-city/polygons-to-obj/issues"
+  },
+  "homepage": "https://github.com/polygon-city/polygons-to-obj",
+  "dependencies": {
+    "lodash": "^3.9.3"
+  }
+}
