@@ -1,6 +1,6 @@
 {
   "name": "polygons-to-obj",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Takes polygon and face arrays and returns an OBJ string",
   "main": "index.js",
   "scripts": {
