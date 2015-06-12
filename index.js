@@ -20,7 +20,7 @@ var polygons2obj = function(polygons, faces, zUP) {
 
   // Use first point as origin
   // TODO: Use a better point – the centroid or the minimum for example
-  // TODO: Store origin somewhere so building can be placed geographically in future
+  // TODO: Store or return origin so objects can be placed correctly
   var origin = _.clone(polygons[0][0]);
 
   if (zUP) {
