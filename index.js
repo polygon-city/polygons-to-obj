@@ -18,10 +18,22 @@ var polygons2obj = function(polygons, faces, zUP) {
   var verticesStr = "";
   var facesStr = "";
 
-  // Use first point as origin
-  // TODO: Use a better point – the centroid or the minimum for example
-  // TODO: Store or return origin so objects can be placed correctly
-  var origin = _.clone(polygons[0][0]);
+  var origin;
+
+  // Find vertex with minimum vertical (Y) value, for origin
+  _.each(polygons, function(polygon) {
+    _.each(polygon, function(point) {
+      if (!origin) {
+        origin = point;
+        return;
+      }
+
+      if (point[1] < origin[1]) {
+        origin = point;
+        return;
+      }
+    });
+  });
 
   if (zUP) {
     var oldOrigin = _.clone(origin);
