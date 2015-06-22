@@ -19,17 +19,18 @@ var polygons2obj = function(polygons, faces, zUP) {
   var facesStr = "";
 
   var origin;
+  var verticalIndex = (zUP) ? 2 : 1;
 
-  // Find vertex with minimum vertical (Y) value, for origin
+  // Find vertex with minimum vertical value, for origin
   _.each(polygons, function(polygon) {
     _.each(polygon, function(point) {
       if (!origin) {
-        origin = point;
+        origin = _.clone(point);
         return;
       }
 
-      if (point[1] < origin[1]) {
-        origin = point;
+      if (point[verticalIndex] < origin[verticalIndex]) {
+        origin = _.clone(point);
         return;
       }
     });
@@ -58,8 +59,18 @@ var polygons2obj = function(polygons, faces, zUP) {
         point[2] = oldPoint[1];
       }
 
+      var realPoint;
+
       _.each(point, function(value, pointIndex) {
-        verticesStr += " " + (value - origin[pointIndex]);
+        realPoint = (value - origin[pointIndex]);
+
+        // Flip Z-axis so object isn't mirrored
+        // TODO: Is this actually required or as a result of some other mistake?
+        if (zUP && pointIndex === 2) {
+          realPoint *= -1;
+        }
+
+        verticesStr += " " + realPoint;
       });
 
       verticesStr += "\n";
