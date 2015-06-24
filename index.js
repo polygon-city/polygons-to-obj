@@ -9,7 +9,7 @@ var _ = require("lodash");
 var polygons2obj = function(polygons, faces, zUP) {
   // Metadata
   var metaStr = "";
-  metaStr += "# Generated using the polygons-to-obj package";
+  metaStr += "# Generated using the polygons-to-obj package\n";
 
   // Index offset for faces
   var facesOffset = 0;
@@ -18,31 +18,54 @@ var polygons2obj = function(polygons, faces, zUP) {
   var verticesStr = "";
   var facesStr = "";
 
-  var origin;
+  // Vertical can be either Y (1) or Z (2)
   var verticalIndex = (zUP) ? 2 : 1;
 
-  // Find vertex with minimum vertical value, for origin
+  // Horizontal can be either X (0) or Y (1)
+  var horizontalIndex = (zUP) ? 0 : 1;
+
+  var origin;
+  var vertMin;
+
   _.each(polygons, function(polygon) {
+    // Find minimum on vertical axis
     _.each(polygon, function(point) {
-      if (!origin) {
-        origin = _.clone(point);
+      if (!vertMin) {
+        vertMin = point[verticalIndex];
         return;
       }
 
-      if (point[verticalIndex] < origin[verticalIndex]) {
-        origin = _.clone(point);
+      if (point[verticalIndex] < vertMin) {
+        vertMin = point[verticalIndex];
         return;
       }
     });
   });
 
-  if (zUP) {
-    var oldOrigin = _.clone(origin);
+  // Collect points that share minimum vertical values
+  var vertMinPoints = [];
+  _.each(polygons, function(polygon) {
+    _.each(polygon, function(point) {
+      vertMinPoints = _.unique(vertMinPoints.concat(_.filter(polygon, function(point) {
+        return (point[verticalIndex] === vertMin);
+      })));
+    });
+  });
 
-    // Flip axis
-    origin[1] = oldOrigin[2];
-    origin[2] = oldOrigin[1];
-  }
+  // Find point with minimum on alternate horizontal axis
+  _.each(vertMinPoints, function(point) {
+    if (!origin) {
+      origin = _.clone(point);
+      return;
+    }
+
+    if (point[horizontalIndex] < origin[horizontalIndex]) {
+      origin = _.clone(point);
+      return;
+    }
+  });
+
+  metaStr += "# Origin: (" + origin[0] + ", " + origin[1] + ", " + origin[2] + ")\n"
 
   // Assumes polygons are [[x,y,z,x,y,z,...], [...]]
   _.each(polygons, function(polygon, polygonIndex) {
@@ -51,26 +74,15 @@ var polygons2obj = function(polygons, faces, zUP) {
     _.each(polygon, function(point) {
       verticesStr += "v";
 
-      if (zUP) {
-        var oldPoint = _.clone(point);
+      var realPoint = pointToOrigin(point, origin);
 
-        // Flip axis
-        point[1] = oldPoint[2];
-        point[2] = oldPoint[1];
+      if (zUP) {
+        // Rotate object around X-axis so Z-axis points up
+        rotateX3DPoint(90, realPoint);
       }
 
-      var realPoint;
-
-      _.each(point, function(value, pointIndex) {
-        realPoint = (value - origin[pointIndex]);
-
-        // Flip Z-axis so object isn't mirrored
-        // TODO: Is this actually required or as a result of some other mistake?
-        if (zUP && pointIndex === 2) {
-          realPoint *= -1;
-        }
-
-        verticesStr += " " + realPoint;
+      _.each(realPoint, function(value, pointIndex) {
+        verticesStr += " " + value;
       });
 
       verticesStr += "\n";
@@ -100,11 +112,53 @@ var polygons2obj = function(polygons, faces, zUP) {
 
   var objStr = "";
 
-  objStr += metaStr + "\n\n";
+  objStr += metaStr + "\n";
   objStr += verticesStr + "\n";
   objStr += facesStr;
 
   return objStr;
+};
+
+// Find relative position of point from origin
+var pointToOrigin = function(point, origin) {
+  var realPoint = [];
+  var realValue;
+
+  _.each(point, function(value, pointIndex) {
+    realValue = value - origin[pointIndex];
+    realPoint.push(realValue);
+  });
+
+  return realPoint;
+};
+
+// Rotate object around X axis
+// https://www.khanacademy.org/computer-programming/3d-tutorial-3/1645062289
+var rotateX3D = function(theta, polygons) {
+  var sin_t = Math.sin(theta);
+  var cos_t = Math.cos(theta);
+
+  for (var n=0; n<polygons.length; n++) {
+    var point = polygons[n];
+    var y = point[1];
+    var z = point[2];
+    point[1] = y * cos_t - z * sin_t;
+    point[2] = z * cos_t + y * sin_t;
+  }
+};
+
+// Rotate point around X axis (in degrees)
+var rotateX3DPoint = function(theta, point) {
+  // Convert degrees to radians
+  theta = theta * Math.PI / 180;
+
+  var sin_t = Math.sin(theta);
+  var cos_t = Math.cos(theta);
+
+  var y = point[2];
+  var z = point[1];
+  point[2] = y * cos_t - z * sin_t;
+  point[1] = z * cos_t + y * sin_t;
 };
 
 module.exports = polygons2obj;
