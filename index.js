@@ -6,7 +6,7 @@ var _ = require("lodash");
 
 // TODO: Work out how to correct normals / orienation when using zUP
 
-var polygons2obj = function(polygons, faces, zUP) {
+var polygons2obj = function(polygons, faces, origin, verticalOffset, zUP) {
   // Metadata
   var metaStr = "";
   metaStr += "# Generated using the polygons-to-obj package\n";
@@ -18,54 +18,59 @@ var polygons2obj = function(polygons, faces, zUP) {
   var verticesStr = "";
   var facesStr = "";
 
-  // Vertical can be either Y (1) or Z (2)
+  // // Vertical can be either Y (1) or Z (2)
   var verticalIndex = (zUP) ? 2 : 1;
 
   // Horizontal can be either X (0) or Y (1)
   var horizontalIndex = (zUP) ? 0 : 1;
 
-  var origin;
-  var vertMin;
+  // REMOVED: Origin logic is now part of citygml-to-obj
+  //
+  // var origin;
+  // var vertMin;
+  //
+  // _.each(polygons, function(polygon) {
+  //   // Find minimum on vertical axis
+  //   _.each(polygon, function(point) {
+  //     if (!vertMin) {
+  //       vertMin = point[verticalIndex];
+  //       return;
+  //     }
+  //
+  //     if (point[verticalIndex] < vertMin) {
+  //       vertMin = point[verticalIndex];
+  //       return;
+  //     }
+  //   });
+  // });
+  //
+  // // Collect points that share minimum vertical values
+  // var vertMinPoints = [];
+  // _.each(polygons, function(polygon) {
+  //   _.each(polygon, function(point) {
+  //     vertMinPoints = _.unique(vertMinPoints.concat(_.filter(polygon, function(point) {
+  //       return (point[verticalIndex] === vertMin);
+  //     })));
+  //   });
+  // });
+  //
+  // // Find point with minimum on alternate horizontal axis
+  // _.each(vertMinPoints, function(point) {
+  //   if (!origin) {
+  //     origin = _.clone(point);
+  //     return;
+  //   }
+  //
+  //   if (point[horizontalIndex] < origin[horizontalIndex]) {
+  //     origin = _.clone(point);
+  //     return;
+  //   }
+  // });
 
-  _.each(polygons, function(polygon) {
-    // Find minimum on vertical axis
-    _.each(polygon, function(point) {
-      if (!vertMin) {
-        vertMin = point[verticalIndex];
-        return;
-      }
+  metaStr += "# Origin: (" + origin[horizontalIndex] + ", " + verticalOffset + ", " + origin[((verticalIndex === 2) ? 1 : 2)] + ")\n";
 
-      if (point[verticalIndex] < vertMin) {
-        vertMin = point[verticalIndex];
-        return;
-      }
-    });
-  });
-
-  // Collect points that share minimum vertical values
-  var vertMinPoints = [];
-  _.each(polygons, function(polygon) {
-    _.each(polygon, function(point) {
-      vertMinPoints = _.unique(vertMinPoints.concat(_.filter(polygon, function(point) {
-        return (point[verticalIndex] === vertMin);
-      })));
-    });
-  });
-
-  // Find point with minimum on alternate horizontal axis
-  _.each(vertMinPoints, function(point) {
-    if (!origin) {
-      origin = _.clone(point);
-      return;
-    }
-
-    if (point[horizontalIndex] < origin[horizontalIndex]) {
-      origin = _.clone(point);
-      return;
-    }
-  });
-
-  metaStr += "# Origin: (" + origin[0] + ", " + origin[1] + ", " + origin[2] + ")\n"
+  // Replace vertical element of origin with vertical offset
+  origin[verticalIndex] = verticalOffset;
 
   // Assumes polygons are [[x,y,z,x,y,z,...], [...]]
   _.each(polygons, function(polygon, polygonIndex) {
